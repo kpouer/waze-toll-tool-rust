@@ -9,7 +9,6 @@ use crate::price_grid::{PriceKey, PriceLoader};
 use crate::toll_file::{load_toll_file, Matrix, Section, Toll, TollFile};
 
 struct Audit {
-    total: u16,
     obsolete: u16,
     found: u16,
     not_found: u16
@@ -69,8 +68,14 @@ impl PriceService {
         let car_matrix = self.build_matrix_category(&toll.sections, Category::Car);
         let motorcycle_matrix = self.build_matrix_category(&toll.sections, Category::Motorcycle);
         toll.entry_exit_matrix = vec![car_matrix.0, motorcycle_matrix.0];
-        println!("Car\t: Found {} prices, {} obsolete, {} found, {} not found", car_matrix.1.total, car_matrix.1.obsolete, car_matrix.1.found, car_matrix.1.not_found);
-        println!("Motocycles\t: Found {} prices, {} obsolete, {} found, {} not found", motorcycle_matrix.1.total, motorcycle_matrix.1.obsolete, motorcycle_matrix.1.found, motorcycle_matrix.1.not_found);
+        println!("Car        : Found {} prices, {} obsolete, {} not found",
+                 car_matrix.1.found + car_matrix.1.obsolete,
+                 car_matrix.1.obsolete,
+                 car_matrix.1.not_found);
+        println!("Motocycles : Found {} prices, {} obsolete, {} not found",
+                 motorcycle_matrix.1.found + motorcycle_matrix.1.obsolete,
+                 motorcycle_matrix.1.obsolete,
+                 motorcycle_matrix.1.not_found);
     }
 
     fn build_matrix_category(&self, sections: &Vec<Section>, category: Category) -> (Matrix, Audit) {
@@ -116,7 +121,6 @@ impl PriceService {
             matrix_prices.push(row);
         }
         let audit = Audit {
-            total: found_prices + missing_prices,
             obsolete: obsolete_prices,
             found: found_prices,
             not_found: missing_prices
