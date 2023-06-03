@@ -24,7 +24,8 @@ struct FlatFileName {
     entry_index: usize,
     exit_index: usize,
     car_index: usize,
-    motorcycle_index: usize
+    motorcycle_index: usize,
+    file: String
 }
 
 pub(crate) struct PriceLoader<'a> {
@@ -77,7 +78,7 @@ impl<'a> PriceLoader<'a> {
                         if let Ok(result) = self.get_flat_price(&tokens, &flat_file_name, category) {
                             let key = result.0;
                             let value = result.1;
-                            self.insert_price(&mut audit, &key.entry, &key.exit, category, value.price, value.year);
+                            self.insert_price(&mut audit, file_name, &key.entry, &key.exit, category, value.price, value.year);
                         } else {
                             let error = PriceLoadError {
                                 file_name: file_name.to_string(),
@@ -111,7 +112,8 @@ impl<'a> PriceLoader<'a> {
 
             let price = Price {
                 price: price_value,
-                year: flat_file_name.year
+                year: flat_file_name.year,
+                file: flat_file_name.file.clone()
             };
             Ok((key, price))
         } else {
@@ -162,7 +164,7 @@ impl<'a> PriceLoader<'a> {
                     let exit = self.name_normalizer.normalize(&header_line_tokens[column]);
                     let price = line_token[column].replace(',', ".");
                     let price = (price.parse::<f32>().unwrap() * 100.) as u16;
-                    self.insert_price(&mut audit, &entry, &exit, category, price, year)
+                    self.insert_price(&mut audit, file_name, &entry, &exit, category, price, year)
                 }
             }
         }
@@ -189,8 +191,8 @@ impl<'a> PriceLoader<'a> {
                         let exit = self.name_normalizer.normalize(&line_tokens_2[line_tokens_2.len() - 1]);
                         if let Ok(value) = line_tokens_2[row].parse::<f32>() {
                             let value = (value * 100.) as u16;
-                            self.insert_price(&mut audit, &entry, &exit, category, value, year);
-                            self.insert_price(&mut audit, &exit, &entry, category, value, year);
+                            self.insert_price(&mut audit, file_name, &entry, &exit, category, value, year);
+                            self.insert_price(&mut audit, file_name, &exit, &entry, category, value, year);
                         } else {
                             println!("Invalid price for {} -> {}", entry, exit);
                             let error = PriceLoadError {
@@ -207,7 +209,7 @@ impl<'a> PriceLoader<'a> {
         audit
     }
 
-    fn insert_price(&mut self, audit: &mut PriceLoadAudit, entry: &String, exit: &String, category: Category, price: u16, year: u16) {
+    fn insert_price(&mut self, audit: &mut PriceLoadAudit, file: &str, entry: &String, exit: &String, category: Category, price: u16, year: u16) {
         let key = PriceKey {
             entry: entry.to_string(),
             exit: exit.to_string(),
@@ -224,7 +226,8 @@ impl<'a> PriceLoader<'a> {
         }
         let price = Price {
             price,
-            year
+            year,
+            file: file.to_string()
         };
 
         match category {
@@ -252,7 +255,8 @@ impl FlatFileName {
             entry_index: tokens[0],
             exit_index: tokens[1],
             car_index: tokens[2],
-            motorcycle_index: tokens[3]
+            motorcycle_index: tokens[3],
+            file: file_name.to_string()
         };
         Ok(flat_file_name)
     }
