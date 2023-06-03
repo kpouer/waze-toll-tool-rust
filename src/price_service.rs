@@ -106,6 +106,7 @@ impl PriceService {
                         let price = price.unwrap();
                         row.push(price.price as f64 / 100 as f64);
                         if year > price.year {
+                            println!("Price is obsolete (from {}) for {}", price.year, key);
                             obsolete_prices += 1;
                         }
                         found_prices += 1;
