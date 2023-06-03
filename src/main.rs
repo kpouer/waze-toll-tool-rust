@@ -13,6 +13,7 @@ pub(crate) const DEFAULT_YEAR: u16 = 2019;
 fn usage() {
     println!("waze-toll-tool build-matrix <toll-file.json>");
     println!("waze-toll-tool get-prices <entry_name>");
+    println!("waze-toll-tool check-prices");
 }
 
 fn command_build_matrix(args: &Vec<String>) {
