@@ -10,7 +10,7 @@ use crate::category::Category;
 use crate::io_tools::{read_lines, read_lines_tokens};
 use crate::name_normalizer::NameNormalizer;
 use crate::price::Price;
-use crate::price_grid::price_load_audit::PriceLoadAudit;
+use crate::price_grid::price_load_audit::{PriceLoadAudit, PriceLoadError};
 
 #[derive(Eq, PartialEq, Hash)]
 pub(crate) struct PriceKey {
@@ -59,7 +59,8 @@ impl<'a> PriceLoader<'a> {
         for path in paths {
             let path = path.unwrap().path();
             // 2020_APRR-1,2,4,8.tsv
-            let file_name = path.file_name().unwrap().to_str().unwrap();
+            let file_name = path.clone();
+            let file_name = file_name.file_name().unwrap().to_str().unwrap();
             let flat_file_name = FlatFileName::new(file_name).unwrap();
             println!("Loading {} -> year {}", file_name, flat_file_name.year);
             let mut skipped_header = false;
@@ -77,6 +78,13 @@ impl<'a> PriceLoader<'a> {
                             let key = result.0;
                             let value = result.1;
                             self.insert_price(&mut audit, &key.entry, &key.exit, category, value.price, value.year);
+                        } else {
+                            let error = PriceLoadError {
+                                file_name: file_name.to_string(),
+                                line: line.to_string(),
+                                error: format!("Invalid line {} for {}", line, category)
+                            };
+                            audit.error.push(error);
                         }
                     }
                 }
@@ -98,14 +106,17 @@ impl<'a> PriceLoader<'a> {
             Category::Motorcycle => {flat_file_name.motorcycle_index}
         };
 
-        let price_value = tokens[price_index].replace(',',".");
-        let price_value = (price_value.parse::<f32>().unwrap() * 100.) as u16;
+        if let Ok(price_value) = tokens[price_index].replace(',',".").parse::<f32>() {
+            let price_value = (price_value * 100.) as u16;
 
-        let price = Price {
-            price: price_value,
-            year: flat_file_name.year
-        };
-        Ok((key, price))
+            let price = Price {
+                price: price_value,
+                year: flat_file_name.year
+            };
+            Ok((key, price))
+        } else {
+            return Err(format!("Invalid price value {} for {}", tokens[price_index], key.entry));
+        }
     }
 
     fn load_matrix(&mut self, category: Category) -> PriceLoadAudit {
@@ -127,7 +138,8 @@ impl<'a> PriceLoader<'a> {
 
     fn load_matrix_file(&mut self, category: Category, dir_entry: DirEntry) -> PriceLoadAudit {
         let path = dir_entry.path();
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = path.clone();
+        let file_name = file_name.file_name().unwrap().to_str().unwrap();
         let year = get_year(&file_name);
         println!("Loading matrix {} -> year {}", file_name, year);
         let mut audit = PriceLoadAudit::new();
@@ -138,32 +150,19 @@ impl<'a> PriceLoader<'a> {
                 let entry = self.name_normalizer.normalize(&line_token[0]);
                 if line_token.len() != header_line_tokens.len() {
                     println!("Invalid line length for {}", entry);
-                    // let error = PriceLoadError {
-                    //     file_name: file_name.to_string(),
-                    //     line: "".to_string(),
-                    //     error: "Invalid line length".to_string()
-                    // };
-                    // audit.error.push(error);
+                    let error = PriceLoadError {
+                        file_name: file_name.to_string(),
+                        line: "".to_string(),
+                        error: "Invalid line length".to_string()
+                    };
+                    audit.error.push(error);
                     continue;
                 }
                 for column in 1..line_token.len() {
                     let exit = self.name_normalizer.normalize(&header_line_tokens[column]);
                     let price = line_token[column].replace(',', ".");
                     let price = (price.parse::<f32>().unwrap() * 100.) as u16;
-                    let key = PriceKey {
-                        entry: entry.to_string(),
-                        exit: exit.to_string(),
-                        category
-                    };
-                    let price = Price {
-                        price,
-                        year
-                    };
-                    match category {
-                        Category::Car => audit.loaded_cars += 1,
-                        Category::Motorcycle => audit.loaded_motorcycles += 1
-                    }
-                    self.prices.insert(key, price);
+                    self.insert_price(&mut audit, &entry, &exit, category, price, year)
                 }
             }
         }
@@ -177,7 +176,8 @@ impl<'a> PriceLoader<'a> {
         let mut audit = PriceLoadAudit::new();
         for path in paths {
             let path = path.unwrap().path();
-            let file_name = path.file_name().unwrap().to_str().unwrap();
+            let file_name = path.clone();
+            let file_name = file_name.file_name().unwrap().to_str().unwrap();
             let year = get_year(&file_name);
             println!("Loading triangle {} -> year {}", file_name, year);
             if let Ok(tokenized_lines) = read_lines_tokens(path) {
@@ -193,12 +193,12 @@ impl<'a> PriceLoader<'a> {
                             self.insert_price(&mut audit, &exit, &entry, category, value, year);
                         } else {
                             println!("Invalid price for {} -> {}", entry, exit);
-                            // let error = PriceLoadError {
-                            //     file_name: file_name.to_string(),
-                            //     line: "".to_string(),
-                            //     error: "Invalid line length".to_string()
-                            // };
-                            // audit.error.push(error);
+                            let error = PriceLoadError {
+                                file_name: file_name.to_string(),
+                                line: "".to_string(),
+                                error: "Invalid line length".to_string()
+                            };
+                            audit.error.push(error);
                         }
                     }
                 }
@@ -217,7 +217,7 @@ impl<'a> PriceLoader<'a> {
         if existing_prices.is_some() {
             let existing_price = existing_prices.unwrap();
             if existing_price.year > year {
-                println!("Existing price is more recent for {} -> {}", entry, exit);
+                // println!("Existing price is more recent for {} -> {}", entry, exit);
                 // the existing price is more recent, skip
                 return;
             }
