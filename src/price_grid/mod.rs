@@ -55,41 +55,45 @@ impl<'a> PriceLoader<'a> {
 
     fn load_flat(&mut self) -> PriceLoadAudit {
         println!("Loading flat prices");
-        let paths = fs::read_dir("prices/flat").unwrap();
         let mut audit = PriceLoadAudit ::new();
-        for path in paths {
-            let path = path.unwrap().path();
-            // 2020_APRR-1,2,4,8.tsv
-            let file_name = path.clone();
-            let file_name = file_name.file_name().unwrap().to_str().unwrap();
-            let flat_file_name = FlatFileName::new(file_name).unwrap();
-            println!("Loading {} -> year {}", file_name, flat_file_name.year);
-            let mut skipped_header = false;
-            if let Ok(lines) = read_lines(path) {
-                for line in lines {
-                    if !skipped_header {
-                        skipped_header = true;
-                        continue;
-                    }
-                    let line = line.unwrap();
-                    let tokens = line.split("\t").collect::<Vec<&str>>();
-                    let categories = all::<Category>().collect::<Vec<_>>();
-                    for category in categories {
-                        if let Ok(result) = self.get_flat_price(&tokens, &flat_file_name, category) {
-                            let key = result.0;
-                            let value = result.1;
-                            self.insert_price(&mut audit, file_name, &key.entry, &key.exit, category, value.price, value.year);
-                        } else {
-                            let error = PriceLoadError {
-                                file_name: file_name.to_string(),
-                                line: line.to_string(),
-                                error: format!("Invalid line {} for {}", line, category)
-                            };
-                            audit.error.push(error);
+        const FLAT_PRICES_FOLDER: &'static str = "prices/flat";
+        if let Ok(paths) = fs::read_dir(FLAT_PRICES_FOLDER) {
+            for path in paths {
+                let path = path.unwrap().path();
+                // 2020_APRR-1,2,4,8.tsv
+                let file_name = path.clone();
+                let file_name = file_name.file_name().unwrap().to_str().unwrap();
+                let flat_file_name = FlatFileName::new(file_name).unwrap();
+                println!("Loading {} -> year {}", file_name, flat_file_name.year);
+                let mut skipped_header = false;
+                if let Ok(lines) = read_lines(path) {
+                    for line in lines {
+                        if !skipped_header {
+                            skipped_header = true;
+                            continue;
+                        }
+                        let line = line.unwrap();
+                        let tokens = line.split("\t").collect::<Vec<&str>>();
+                        let categories = all::<Category>().collect::<Vec<_>>();
+                        for category in categories {
+                            if let Ok(result) = self.get_flat_price(&tokens, &flat_file_name, category) {
+                                let key = result.0;
+                                let value = result.1;
+                                self.insert_price(&mut audit, file_name, &key.entry, &key.exit, category, value.price, value.year);
+                            } else {
+                                let error = PriceLoadError {
+                                    file_name: file_name.to_string(),
+                                    line: line.to_string(),
+                                    error: format!("Invalid line {} for {}", line, category)
+                                };
+                                audit.error.push(error);
+                            }
                         }
                     }
                 }
             }
+        } else {
+            println!("Directory {} not found", FLAT_PRICES_FOLDER);
         }
         audit
     }
@@ -123,17 +127,17 @@ impl<'a> PriceLoader<'a> {
 
     fn load_matrix(&mut self, category: Category) -> PriceLoadAudit {
         println!("Loading matrix {}", category);
-        let path = format!("prices/onedirmatrix/{}", category.to_string().to_lowercase());
+        let path = format!("prices/matrix/{}", category.to_string().to_lowercase());
         let mut audit = PriceLoadAudit::new();
-        if !fs::metadata(&path).unwrap().is_dir() {
+        if is_dir(&path) {
+            let paths = fs::read_dir(path).unwrap();
+            for path in paths {
+                let dir_entry = path.unwrap();
+                let new_audit = self.load_matrix_file(category, dir_entry);
+                audit.merge(&new_audit);
+            }
+        } else {
             println!("Directory {} not found", path);
-            return audit;
-        }
-        let paths = fs::read_dir(path).unwrap();
-        for path in paths {
-            let dir_entry = path.unwrap();
-            let new_audit = self.load_matrix_file(category, dir_entry);
-            audit.merge(&new_audit);
         }
         audit
     }
@@ -174,37 +178,41 @@ impl<'a> PriceLoader<'a> {
     fn load_triangle(&mut self, category: Category) -> PriceLoadAudit{
         println!("Loading triangle matrix");
         let path = format!("prices/triangle/{}", category.to_string().to_lowercase());
-        let paths = fs::read_dir(path).unwrap();
         let mut audit = PriceLoadAudit::new();
-        for path in paths {
-            let path = path.unwrap().path();
-            let file_name = path.clone();
-            let file_name = file_name.file_name().unwrap().to_str().unwrap();
-            let year = get_year(&file_name);
-            println!("Loading triangle {} -> year {}", file_name, year);
-            if let Ok(tokenized_lines) = read_lines_tokens(path) {
-                for row in 0..tokenized_lines.len() {
-                    let line_token = &tokenized_lines[row];
-                    let entry = self.name_normalizer.normalize(&line_token[line_token.len() - 1]);
-                    for column in row + 1..line_token.len() {
-                        let line_tokens_2 = &tokenized_lines[column];
-                        let exit = self.name_normalizer.normalize(&line_tokens_2[line_tokens_2.len() - 1]);
-                        if let Ok(value) = line_tokens_2[row].parse::<f32>() {
-                            let value = (value * 100.) as u16;
-                            self.insert_price(&mut audit, file_name, &entry, &exit, category, value, year);
-                            self.insert_price(&mut audit, file_name, &exit, &entry, category, value, year);
-                        } else {
-                            println!("Invalid price for {} -> {}", entry, exit);
-                            let error = PriceLoadError {
-                                file_name: file_name.to_string(),
-                                line: "".to_string(),
-                                error: "Invalid line length".to_string()
-                            };
-                            audit.error.push(error);
+        if is_dir(&path) {
+            let paths = fs::read_dir(path).unwrap();
+            for path in paths {
+                let path = path.unwrap().path();
+                let file_name = path.clone();
+                let file_name = file_name.file_name().unwrap().to_str().unwrap();
+                let year = get_year(&file_name);
+                println!("Loading triangle {} -> year {}", file_name, year);
+                if let Ok(tokenized_lines) = read_lines_tokens(path) {
+                    for row in 0..tokenized_lines.len() {
+                        let line_token = &tokenized_lines[row];
+                        let entry = self.name_normalizer.normalize(&line_token[line_token.len() - 1]);
+                        for column in row + 1..line_token.len() {
+                            let line_tokens_2 = &tokenized_lines[column];
+                            let exit = self.name_normalizer.normalize(&line_tokens_2[line_tokens_2.len() - 1]);
+                            if let Ok(value) = line_tokens_2[row].parse::<f32>() {
+                                let value = (value * 100.) as u16;
+                                self.insert_price(&mut audit, file_name, &entry, &exit, category, value, year);
+                                self.insert_price(&mut audit, file_name, &exit, &entry, category, value, year);
+                            } else {
+                                println!("Invalid price for {} -> {}", entry, exit);
+                                let error = PriceLoadError {
+                                    file_name: file_name.to_string(),
+                                    line: "".to_string(),
+                                    error: "Invalid line length".to_string()
+                                };
+                                audit.error.push(error);
+                            }
                         }
                     }
                 }
             }
+        } else {
+            println!("Directory {} not found", path);
         }
         audit
     }
@@ -271,4 +279,13 @@ impl fmt::Display for PriceKey {
 fn get_year(file_name: &str) -> u16 {
     let year = file_name[0..4].parse::<u16>().unwrap_or_else(|_| DEFAULT_YEAR);
     year
+}
+
+fn is_dir(path: &String) -> bool {
+    let metadata = fs::metadata(path);
+    if metadata.is_err() {
+        return false;
+    }
+    let metadata = metadata.unwrap();
+    metadata.is_dir()
 }

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use crate::io_tools::read_lines;
 
-const ALIAS_FILENAME: &str = "prices/alias.csv";
 
 pub(crate) struct NameNormalizer {
     map: HashMap<String, String>
@@ -9,6 +8,7 @@ pub(crate) struct NameNormalizer {
 
 impl NameNormalizer {
     pub(crate) fn new() -> NameNormalizer {
+        const ALIAS_FILENAME: &'static str = "prices/alias.csv";
         let mut map: HashMap<String, String> = HashMap::new();
         if let Ok(lines) = read_lines(ALIAS_FILENAME) {
             for line in lines {
