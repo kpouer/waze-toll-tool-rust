@@ -7,7 +7,7 @@ use std::fs::DirEntry;
 use enum_iterator::{all};
 use crate::{DEFAULT_YEAR};
 use crate::category::Category;
-use crate::io_tools::{read_lines, read_lines_tokens};
+use crate::io_tools::{is_dir, read_lines, read_lines_tokens};
 use crate::name_normalizer::NameNormalizer;
 use crate::price::Price;
 use crate::price_grid::price_load_audit::{PriceLoadAudit, PriceLoadError};
@@ -279,13 +279,4 @@ impl fmt::Display for PriceKey {
 fn get_year(file_name: &str) -> u16 {
     let year = file_name[0..4].parse::<u16>().unwrap_or_else(|_| DEFAULT_YEAR);
     year
-}
-
-fn is_dir(path: &String) -> bool {
-    let metadata = fs::metadata(path);
-    if metadata.is_err() {
-        return false;
-    }
-    let metadata = metadata.unwrap();
-    metadata.is_dir()
 }

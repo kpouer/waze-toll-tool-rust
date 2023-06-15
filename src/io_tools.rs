@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io;
+use std::{fs, io};
 use std::io::BufRead;
 use std::path::Path;
 
@@ -29,15 +29,20 @@ pub(crate) fn read_lines_tokens<P>(filename: P) -> io::Result<Vec<Vec<String>>> 
     }
 }
 
-// pub(crate) fn read_lines_tokens<P>(filename: P) -> io::Result<Vec<Vec<String>>> where P: AsRef<Path>, {
-//     if let Ok(lines) = read_lines(filename) {
-//         let lines_tokens: Vec<Vec<String>> = lines
-//             .map(|line| line.unwrap())
-//             .map(|line| line.split('\t'))
-//             .map(|tokens| tokens.map(|token| token.to_string()).collect::<Vec<String>>())
-//             .collect();
-//         Ok(lines_tokens)
-//     } else {
-//         Err(io::Error::new(io::ErrorKind::Other, "Error reading file"))
-//     }
-// }
+pub(crate) fn is_dir(path: &String) -> bool {
+    let metadata = fs::metadata(path);
+    if metadata.is_err() {
+        return false;
+    }
+    let metadata = metadata.unwrap();
+    metadata.is_dir()
+}
+
+pub(crate) fn is_file(path: &String) -> bool {
+    let metadata = fs::metadata(path);
+    if metadata.is_err() {
+        return false;
+    }
+    let metadata = metadata.unwrap();
+    metadata.is_file()
+}

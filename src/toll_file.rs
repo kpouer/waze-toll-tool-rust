@@ -1,6 +1,9 @@
 #![allow(non_snake_case)]
+
+use std::fs::read_to_string;
 use serde::{Serialize, Deserialize};
-use serde_json::Result;
+use serde::de::Error;
+use serde_json::{from_str, Result};
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct TollFile {
@@ -47,7 +50,10 @@ pub(crate) struct Segment {
 }
 
 pub(crate) fn load_toll_file(toll_file_name: &String) -> Result<TollFile> {
-    let toll_file = std::fs::read_to_string(toll_file_name).unwrap();
-    let toll_file: TollFile = serde_json::from_str(&toll_file)?;
-    Ok(toll_file)
+    if let Ok(toll_file) = read_to_string(toll_file_name) {
+        let toll_file: TollFile = from_str(&toll_file)?;
+        Ok(toll_file)
+    } else {
+        Err(serde_json::Error::custom(format!("Failed to load toll file {}", toll_file_name)))
+    }
 }
