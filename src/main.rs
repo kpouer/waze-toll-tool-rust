@@ -1,5 +1,7 @@
 extern crate core;
 
+use price_service::PriceService;
+
 mod price_grid;
 mod io_tools;
 mod toll_file;
@@ -22,7 +24,7 @@ fn command_build_matrix(args: &Vec<String>) {
         std::process::exit(exitcode::USAGE);
     }
     let toll_file = &args[2];
-    let price_service = price_service::PriceService::new();
+    let price_service = PriceService::new();
     price_service.build_matrix(toll_file);
     std::process::exit(exitcode::OK);
 }
@@ -33,13 +35,13 @@ fn command_get_prices(args: &Vec<String>) {
         std::process::exit(exitcode::USAGE);
     }
     let entry_name = &args[2];
-    let price_service = price_service::PriceService::new();
+    let price_service = PriceService::new();
     price_service.get_prices(entry_name);
     std::process::exit(exitcode::OK);
 }
 
 fn command_check_prices() {
-    let price_service = price_service::PriceService::new();
+    let price_service = PriceService::new();
     println!("Price service loaded : {}", price_service);
     std::process::exit(exitcode::OK);
 }
