@@ -8,7 +8,7 @@ pub(crate) fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<F
     Ok(io::BufReader::new(file).lines())
 }
 
-pub(crate) fn tokenize_line(line: &str, separator: &str) -> Vec<String> {
+pub(crate) fn tokenize_string(line: &str, separator: &str) -> Vec<String> {
     let tokens = line.split(separator);
     let tokens = tokens.map(|token| token.to_string()).collect::<Vec<String>>();
     tokens
@@ -20,13 +20,19 @@ pub(crate) fn read_lines_tokens<P>(filename: P) -> io::Result<Vec<Vec<String>>> 
         for line in lines {
             let line = line.unwrap();
             let line = line.trim();
-            let tokens = tokenize_line(&line, "\t");
+            let tokens = tokenize_string(&line, "\t");
             lines_tokens.push(tokens);
         }
         Ok(lines_tokens)
     } else {
         Err(io::Error::new(io::ErrorKind::Other, "Error reading file"))
     }
+}
+
+pub(crate) fn get_folder(filename: &str) -> String {
+    let path = std::path::PathBuf::from(filename);
+    let dir = path.parent().unwrap();
+    dir.to_str().unwrap().to_string()
 }
 
 pub(crate) fn is_dir(path: &String) -> bool {
