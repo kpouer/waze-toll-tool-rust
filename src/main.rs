@@ -26,7 +26,6 @@ fn command_build_matrix(args: &Vec<String>) {
     let toll_file = &args[2];
     let price_service = PriceService::new();
     price_service.build_matrix(toll_file);
-    std::process::exit(exitcode::OK);
 }
 
 fn command_get_prices(args: &Vec<String>) {
@@ -37,13 +36,11 @@ fn command_get_prices(args: &Vec<String>) {
     let entry_name = &args[2];
     let price_service = PriceService::new();
     price_service.get_prices(entry_name);
-    std::process::exit(exitcode::OK);
 }
 
 fn command_check_prices() {
     let price_service = PriceService::new();
     println!("Price service loaded : {}", price_service);
-    std::process::exit(exitcode::OK);
 }
 
 fn main() {
@@ -56,10 +53,13 @@ fn main() {
     let first_arg = &args[1];
     if first_arg == "build-matrix" {
         command_build_matrix(&args);
+        std::process::exit(exitcode::OK);
     } else if first_arg == "get-prices" {
         command_get_prices(&args);
+        std::process::exit(exitcode::OK);
     } else if first_arg == "check-prices" {
         command_check_prices();
+        std::process::exit(exitcode::OK);
     }
     usage();
 }
