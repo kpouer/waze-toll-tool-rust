@@ -176,7 +176,7 @@ impl<'a> PriceLoader<'a> {
     }
 
     fn load_triangle(&mut self, category: Category) -> PriceLoadAudit{
-        println!("Loading triangle matrix");
+        println!("Loading triangle matrix {}", category);
         let path = format!("prices/triangle/{}", category.to_string().to_lowercase());
         let mut audit = PriceLoadAudit::new();
         if is_dir(&path) {
