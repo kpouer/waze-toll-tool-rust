@@ -38,7 +38,8 @@ impl PriceService {
         println!("Getting prices for {}", entry_name);
         let mut found_prices = false;
         for (key, value) in &self.prices {
-            if &key.entry == entry_name {
+            let key_entry_name = &key.entry;
+            if key_entry_name.contains(entry_name) {
                 found_prices = true;
                 let destination = &key.exit;
                 println!("{} {}", destination, value.price);
