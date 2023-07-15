@@ -36,11 +36,16 @@ impl PriceService {
 
     pub(crate) fn get_prices(&self, entry_name: &String) {
         println!("Getting prices for {}", entry_name);
+        let mut found_prices = false;
         for (key, value) in &self.prices {
             if &key.entry == entry_name {
+                found_prices = true;
                 let destination = &key.exit;
                 println!("{} {}", destination, value.price);
             }
+        }
+        if !found_prices {
+            println!("No prices found for {}", entry_name);
         }
     }
 
