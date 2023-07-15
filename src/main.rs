@@ -1,5 +1,6 @@
 extern crate core;
 
+use std::process::ExitCode;
 use price_service::PriceService;
 
 mod price_grid;
@@ -11,6 +12,7 @@ mod price;
 mod category;
 
 pub(crate) const DEFAULT_YEAR: u16 = 2019;
+const USAGE: u8 = 64;
 
 fn usage() {
     println!("waze-toll-tool build-matrix <toll-file.json>");
@@ -18,48 +20,49 @@ fn usage() {
     println!("waze-toll-tool check-prices");
 }
 
-fn command_build_matrix(args: &Vec<String>) {
+fn command_build_matrix(args: &Vec<String>) -> ExitCode {
     if args.len() < 3 {
         usage();
-        std::process::exit(exitcode::USAGE);
+        return ExitCode::from(USAGE);
     }
     let toll_file = &args[2];
     let price_service = PriceService::new();
     price_service.build_matrix(toll_file);
+    ExitCode::SUCCESS
 }
 
-fn command_get_prices(args: &Vec<String>) {
+fn command_get_prices(args: &Vec<String>) -> ExitCode {
     if args.len() < 3 {
         usage();
-        std::process::exit(exitcode::USAGE);
+        return ExitCode::from(USAGE);
     }
     let entry_name = &args[2];
     let price_service = PriceService::new();
     price_service.get_prices(entry_name);
+    ExitCode::SUCCESS
 }
 
-fn command_check_prices() {
+fn command_check_prices() -> ExitCode {
     let price_service = PriceService::new();
     println!("Price service loaded : {}", price_service);
+    ExitCode::SUCCESS
 }
 
-fn main() {
+fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
         usage();
-        std::process::exit(exitcode::USAGE);
+        return ExitCode::from(USAGE);
     }
 
     let first_arg = &args[1];
     if first_arg == "build-matrix" {
-        command_build_matrix(&args);
-        std::process::exit(exitcode::OK);
+        return command_build_matrix(&args);
     } else if first_arg == "get-prices" {
-        command_get_prices(&args);
-        std::process::exit(exitcode::OK);
+        return command_get_prices(&args);
     } else if first_arg == "check-prices" {
-        command_check_prices();
-        std::process::exit(exitcode::OK);
+        return command_check_prices();
     }
     usage();
+    ExitCode::SUCCESS
 }

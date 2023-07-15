@@ -25,7 +25,7 @@ impl NameNormalizer {
             }
         } else {
             println!("Unable to proceed : cannot read alias file {}", ALIAS_FILENAME);
-            std::process::exit(exitcode::DATAERR);
+            panic!("Unable to proceed : cannot read alias file {}", ALIAS_FILENAME);
         }
         NameNormalizer {
             map
