@@ -30,18 +30,20 @@ impl<'a> PriceLoader<'a> {
         let mut audit = PriceLoadAudit::new();
         println!("Loading triangle {} -> year {}", file_name, year);
         if let Ok(tokenized_lines) = read_lines_tokens(path) {
-            for row in 0..tokenized_lines.len() {
+            let row_count = tokenized_lines.len();
+            for row in 0..row_count {
                 let line_token = &tokenized_lines[row];
                 let entry = self.name_normalizer.normalize(&line_token[line_token.len() - 1]);
-                for column in row + 1..line_token.len() {
+                for column in row + 1..row_count {
                     let line_tokens_2 = &tokenized_lines[column];
                     let exit = self.name_normalizer.normalize(&line_tokens_2[line_tokens_2.len() - 1]);
-                    if let Ok(value) = line_tokens_2[row].parse::<f32>() {
+                    let price_token = &line_tokens_2[row].replace(',', ".");
+                    if let Ok(value) = price_token.parse::<f32>() {
                         let value = (value * 100.) as u16;
                         self.insert_price(&mut audit, file_name, &entry, &exit, category, value, year);
                         self.insert_price(&mut audit, file_name, &exit, &entry, category, value, year);
                     } else {
-                        println!("Invalid price for {} -> {}", entry, exit);
+                        println!("Invalid price for {} -> {} : {}", entry, exit, price_token);
                         let error = PriceLoadError {
                             file_name: file_name.to_string(),
                             line: "".to_string(),
