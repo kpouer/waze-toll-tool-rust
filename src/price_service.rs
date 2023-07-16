@@ -11,8 +11,27 @@ use crate::toll_file::{load_toll_file, Matrix, Section, Toll, TollFile};
 struct Audit {
     obsolete: u16,
     found: u16,
-    not_found: u16
+    not_found: u16,
+    obsolete_files: Vec<String>
 }
+
+impl Audit {
+    fn new() -> Audit {
+        Audit {
+            obsolete: 0,
+            found: 0,
+            not_found: 0,
+            obsolete_files: Vec::new()
+        }
+    }
+
+    fn add_obsolete_file(&mut self, file: &String) {
+        if !self.obsolete_files.contains(file) {
+            self.obsolete_files.push(file.clone());
+        }
+    }
+}
+
 pub(crate) struct PriceService {
     prices: HashMap<PriceKey, Price>,
     name_normalizer: NameNormalizer
@@ -91,17 +110,24 @@ impl PriceService {
             println!("Skipping toll {} because it has {} rules", toll.toll_id, toll.rules.len());
             return;
         }
-        let car_matrix = self.build_matrix_category(&toll.sections, Category::Car);
-        let motorcycle_matrix = self.build_matrix_category(&toll.sections, Category::Motorcycle);
-        toll.entry_exit_matrix = vec![car_matrix.0, motorcycle_matrix.0];
+        let (car_matrix, car_audit) = self.build_matrix_category(&toll.sections, Category::Car);
+        let (motorcycle_matrix, motorcycle_audit) = self.build_matrix_category(&toll.sections, Category::Motorcycle);
+        toll.entry_exit_matrix = vec![car_matrix, motorcycle_matrix];
         println!("Car        : Found {} prices, {} obsolete, {} not found",
-                 car_matrix.1.found + car_matrix.1.obsolete,
-                 car_matrix.1.obsolete,
-                 car_matrix.1.not_found);
+                 car_audit.found,
+                 car_audit.obsolete,
+                 car_audit.not_found);
         println!("Motocycles : Found {} prices, {} obsolete, {} not found",
-                 motorcycle_matrix.1.found + motorcycle_matrix.1.obsolete,
-                 motorcycle_matrix.1.obsolete,
-                 motorcycle_matrix.1.not_found);
+                 motorcycle_audit.found,
+                 motorcycle_audit.obsolete,
+                 motorcycle_audit.not_found);
+
+        for obsolete_file in car_audit.obsolete_files {
+            println!("Obsolete file : {}", obsolete_file);
+        }
+        for obsolete_file in motorcycle_audit.obsolete_files {
+            println!("Obsolete file : {}", obsolete_file);
+        }
     }
 
     fn build_matrix_category(&self, sections: &Vec<Section>, category: Category) -> (Matrix, Audit) {
@@ -112,9 +138,7 @@ impl PriceService {
         };
 
         let mut matrix_prices: Vec<Vec<f64>> = Vec::new();
-        let mut missing_prices: u16 = 0;
-        let mut found_prices: u16 = 0;
-        let mut obsolete_prices: u16 = 0;
+        let mut audit = Audit::new();
         for entry_section in sections {
             let mut row = Vec::new();
             let entry_id = self.name_normalizer.normalize(&entry_section.section_id);
@@ -132,25 +156,21 @@ impl PriceService {
                     if price.is_none() {
                         println!("Unknown price for {}", key);
                         row.push(0.0);
-                        missing_prices += 1;
+                        audit.not_found += 1;
                     } else {
                         let price = price.unwrap();
                         row.push(price.price as f64 / 100 as f64);
                         if year > price.year {
-                            println!("Price is obsolete (from {}) for {}, please update file {}", price.year, key, price.file);
-                            obsolete_prices += 1;
+                            println!("Price is obsolete (from {}) for {}", price.year, key);
+                            audit.obsolete += 1;
+                            audit.add_obsolete_file(&price.file);
                         }
-                        found_prices += 1;
+                        audit.found += 1;
                     }
                 }
             }
             matrix_prices.push(row);
         }
-        let audit = Audit {
-            obsolete: obsolete_prices,
-            found: found_prices,
-            not_found: missing_prices
-        };
         let matrix = Matrix {
             friendly_name: category.to_string(),
             matrix_prices,
