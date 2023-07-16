@@ -50,6 +50,26 @@ impl PriceService {
         }
     }
 
+    pub(crate) fn get_station(&self, name: &String) {
+        println!("Getting station for {}", name);
+        let name = self.name_normalizer.normalize(name);
+        let mut found_stations: Vec<&String> = Vec::new();
+        for (key, _value) in &self.prices {
+            let key_entry_name = &key.entry;
+            if key_entry_name.contains(&name) {
+                if !found_stations.contains(&key_entry_name) {
+                    found_stations.push(key_entry_name);
+                }
+            }
+        }
+        if found_stations.is_empty() {
+            println!("No station found for {}", name);
+        }
+        for station in found_stations {
+            println!("{}", station);
+        }
+    }
+
     pub(crate) fn build_matrix(&self, toll_file_name: &String) {
         println!("Building matrix for {}", toll_file_name);
         let toll_file = load_toll_file(toll_file_name);
