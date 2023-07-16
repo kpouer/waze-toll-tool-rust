@@ -63,7 +63,6 @@ impl<'a> PriceLoader<'a> {
         if existing_prices.is_some() {
             let existing_price = existing_prices.unwrap();
             if existing_price.year > year {
-                // println!("Existing price is more recent for {} -> {}", entry, exit);
                 // the existing price is more recent, skip
                 return;
             }

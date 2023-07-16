@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use unidecode::unidecode;
 use crate::io_tools::read_lines;
 
 
@@ -24,7 +25,6 @@ impl NameNormalizer {
                 map.insert(first_token, second_token);
             }
         } else {
-            println!("Unable to proceed : cannot read alias file {}", ALIAS_FILENAME);
             panic!("Unable to proceed : cannot read alias file {}", ALIAS_FILENAME);
         }
         NameNormalizer {
@@ -33,12 +33,13 @@ impl NameNormalizer {
     }
 
     pub(crate) fn normalize(&self, name: &str) -> String {
-        let normalized = name.to_uppercase();
-        let normalized = normalized.replace(" - ", " ");
-        let normalized = normalized.replace(" / ", " ");
-        let normalized = normalized.replace('-', " ");
-        let normalized = normalized.replace('/', " ");
-        let normalized = normalized.replace('\'', " ");
+        let normalized = unidecode(name)
+            .to_uppercase()
+            .replace(" - ", " ")
+            .replace(" / ", " ")
+            .replace('-', " ")
+            .replace('/', " ")
+            .replace('\'', " ");
         if let Some(normalized_name) = self.map.get(&normalized) {
             normalized_name.to_string()
         } else {
