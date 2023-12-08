@@ -160,7 +160,7 @@ impl PriceService {
                         audit.not_found += 1;
                     } else {
                         let price = price.unwrap();
-                        row.push(price.price as f64 / 100 as f64);
+                        row.push(price.price as f64 / 100f64);
                         if year > price.year {
                             println!("Price is obsolete (from {}) for {}", price.year, key);
                             audit.obsolete += 1;
