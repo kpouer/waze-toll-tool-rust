@@ -29,12 +29,6 @@ pub(crate) fn read_lines_tokens<P>(filename: P) -> io::Result<Vec<Vec<String>>> 
     }
 }
 
-pub(crate) fn get_folder(filename: &str) -> String {
-    let path = std::path::PathBuf::from(filename);
-    let dir = path.parent().unwrap();
-    dir.to_str().unwrap().to_string()
-}
-
 pub(crate) fn is_dir(path: &String) -> bool {
     let metadata = fs::metadata(path);
     if metadata.is_err() {
@@ -42,13 +36,4 @@ pub(crate) fn is_dir(path: &String) -> bool {
     }
     let metadata = metadata.unwrap();
     metadata.is_dir()
-}
-
-pub(crate) fn is_file(path: &String) -> bool {
-    let metadata = fs::metadata(path);
-    if metadata.is_err() {
-        return false;
-    }
-    let metadata = metadata.unwrap();
-    metadata.is_file()
 }

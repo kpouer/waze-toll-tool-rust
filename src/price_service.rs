@@ -100,7 +100,8 @@ impl PriceService {
             }
             write_toll_file(&toll_file, "out.json");
         } else {
-            println!("Failed to load toll file {}", toll_file_name);
+            eprintln!("Failed to load toll file {}", toll_file_name);
+            eprintln!("{}", toll_file.err().unwrap());
         }
     }
 
