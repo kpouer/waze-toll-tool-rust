@@ -1,9 +1,10 @@
 use std::fmt;
 use std::fmt::Formatter;
+use crate::price_grid::currency::Currency;
 
 #[derive(Clone)]
 pub(crate) struct Price {
-    pub(crate) price: u16,
+    pub(crate) price: Currency,
     pub(crate) year: u16,
     pub(crate) file: String
 }

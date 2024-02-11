@@ -1,8 +1,20 @@
+use std::fmt::Display;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+#[derive(Clone, Debug)]
 pub(crate) struct Currency {
     value: i16,
     cents: i8,
+}
+
+impl Display for Currency {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.cents == 0 {
+            write!(f, "{}", self.value)
+        } else {
+            write!(f, "{}.{}", self.value, self.cents)
+        }
+    }
 }
 
 impl Currency {

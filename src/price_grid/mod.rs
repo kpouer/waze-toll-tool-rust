@@ -12,6 +12,7 @@ use crate::{DEFAULT_YEAR};
 use crate::category::Category;
 use crate::name_normalizer::NameNormalizer;
 use crate::price::Price;
+use crate::price_grid::currency::Currency;
 use crate::price_grid::price_load_audit::{PriceLoadAudit};
 
 #[derive(Eq, PartialEq, Hash)]
@@ -55,7 +56,7 @@ impl<'a> PriceLoader<'a> {
         audit
     }
 
-    fn insert_price(&mut self, audit: &mut PriceLoadAudit, file: &str, entry: &String, exit: &String, category: Category, price: u16, year: u16) {
+    fn insert_price(&mut self, audit: &mut PriceLoadAudit, file: &str, entry: &String, exit: &String, category: Category, price: Currency, year: u16) {
         let key = PriceKey {
             entry: entry.to_string(),
             exit: exit.to_string(),
