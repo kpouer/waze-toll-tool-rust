@@ -6,7 +6,8 @@ use crate::category::Category;
 use crate::name_normalizer::NameNormalizer;
 use crate::price::Price;
 use crate::price_grid::{PriceKey, PriceLoader};
-use crate::toll_file::{load_toll_file, Matrix, Section, Toll, TollFile};
+use crate::price_grid::currency::Currency;
+use crate::price_grid::toll_file::{load_toll_file, Matrix, Section, Toll, TollFile};
 
 struct Audit {
     obsolete: u16,
@@ -138,7 +139,7 @@ impl PriceService {
             Category::Motorcycle => vec!["MOTORCYCLE".to_string()],
         };
 
-        let mut matrix_prices: Vec<Vec<f64>> = Vec::new();
+        let mut matrix_prices: Vec<Vec<Currency>> = Vec::new();
         let mut audit = Audit::new();
         for entry_section in sections {
             let mut row = Vec::new();
@@ -146,7 +147,7 @@ impl PriceService {
             for exit_section in sections {
                 let exit_id = self.name_normalizer.normalize(&exit_section.section_id);
                 if entry_id == exit_id {
-                    row.push(0.0);
+                    row.push(Currency::zero());
                 } else {
                     let key = PriceKey {
                         entry: entry_id.to_string(),
@@ -156,11 +157,12 @@ impl PriceService {
                     let price = self.prices.get(&key);
                     if price.is_none() {
                         println!("Unknown price for {}", key);
-                        row.push(0.0);
+                        row.push(Currency::zero());
                         audit.not_found += 1;
                     } else {
                         let price = price.unwrap();
-                        row.push(price.price as f64 / 100f64);
+                        let val = price.price as f64 / 100f64;
+                        row.push(Currency::new(val));
                         if year > price.year {
                             println!("Price is obsolete (from {}) for {}", price.year, key);
                             audit.obsolete += 1;

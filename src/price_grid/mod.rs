@@ -2,6 +2,8 @@ mod price_load_audit;
 mod flat_loader;
 mod triangle_loader;
 mod matrix_loader;
+pub(crate) mod currency;
+pub(crate) mod toll_file;
 
 use std::collections::HashMap;
 use std::{fmt};

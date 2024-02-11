@@ -4,6 +4,7 @@ use std::fs::read_to_string;
 use serde::{Serialize, Deserialize};
 use serde::de::Error;
 use serde_json::{from_str, Result};
+use crate::price_grid::currency::Currency;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct TollFile {
@@ -26,7 +27,7 @@ pub(crate) struct Toll {
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Matrix {
     pub(crate) friendly_name: String,
-    pub(crate) matrix_prices: Vec<Vec<f64>>,
+    pub(crate) matrix_prices: Vec<Vec<Currency>>,
     pub(crate) permit_id: String,
     pub(crate) limit_to_vehicles: Vec<String>
 }
