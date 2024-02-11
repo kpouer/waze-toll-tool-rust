@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::str::FromStr;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, Debug)]
@@ -18,14 +19,25 @@ impl Display for Currency {
 }
 
 impl Currency {
-    pub fn new(val: f64) -> Currency {
-        let value = val.trunc() as i16;
-        let cents = (val.fract() * 100.0).round() as i8;
+    fn new(value: i16, cents: i8) -> Currency {
         Currency { value, cents }
     }
 
     pub(crate) fn zero() -> Currency {
         Currency { value: 0, cents: 0 }
+    }
+}
+
+impl FromStr for Currency {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('.').collect();
+        let value = parts[0].parse::<i16>().unwrap();
+        if parts.len() == 1 {
+            return Ok(Currency { value, cents: 0 });
+        }
+        let cents = parts[1].parse::<i8>().unwrap();
+        Ok(Currency { value, cents })
     }
 }
 
@@ -48,27 +60,16 @@ impl<'de> Deserialize<'de> for Currency {
             D: Deserializer<'de>,
     {
         let val = f64::deserialize(deserializer)?;
-        Ok(Currency::new(val))
+        let value = (val * 100.0).round() as i16;
+        let cents = value % 100;
+        let value = ((value - cents) as f64) / 100.0;
+        Ok(Currency::new(value as i16, cents as i8))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn new_currency_with_fractional_value() {
-        let currency = Currency::new(12.34);
-        assert_eq!(currency.value, 12);
-        assert_eq!(currency.cents, 34);
-    }
-
-    #[test]
-    fn new_currency_with_whole_value() {
-        let currency = Currency::new(100.0);
-        assert_eq!(currency.value, 100);
-        assert_eq!(currency.cents, 0);
-    }
 
     #[test]
     fn zero_currency() {
@@ -79,14 +80,28 @@ mod tests {
 
     #[test]
     fn serialize_currency_with_cents() {
-        let currency = Currency::new(12.34);
+        let currency = Currency::new(12, 34);
         let serialized = serde_json::to_string(&currency).unwrap();
         assert_eq!(serialized, "12.34");
     }
 
     #[test]
+    fn serialize_currency_with_cents2() {
+        let currency = Currency::new(12, 04);
+        let serialized = serde_json::to_string(&currency).unwrap();
+        assert_eq!(serialized, "12.04");
+    }
+
+    #[test]
+    fn serialize_currency_with_cents3() {
+        let currency = Currency::new(12, 3);
+        let serialized = serde_json::to_string(&currency).unwrap();
+        assert_eq!(serialized, "12.3");
+    }
+
+    #[test]
     fn serialize_currency_without_cents() {
-        let currency = Currency::new(100.0);
+        let currency = Currency::new(100, 0);
         let serialized = serde_json::to_string(&currency).unwrap();
         assert_eq!(serialized, "100");
     }

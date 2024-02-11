@@ -161,8 +161,7 @@ impl PriceService {
                         audit.not_found += 1;
                     } else {
                         let price = price.unwrap();
-                        let val = price.price as f64 / 100f64;
-                        row.push(Currency::new(val));
+                        row.push(price.price.clone());
                         if year > price.year {
                             println!("Price is obsolete (from {}) for {}", price.year, key);
                             audit.obsolete += 1;

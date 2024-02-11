@@ -4,6 +4,7 @@ use crate::category::Category;
 use crate::io_tools::{is_dir, read_lines_tokens};
 use crate::price_grid::price_load_audit::{PriceLoadAudit, PriceLoadError};
 use crate::price_grid::{get_year, PriceLoader};
+use crate::price_grid::currency::Currency;
 
 impl<'a> PriceLoader<'a> {
     pub(crate) fn load_matrix(&mut self, category: Category) -> PriceLoadAudit {
@@ -48,7 +49,7 @@ impl<'a> PriceLoader<'a> {
                 for column in 1..line_token.len() {
                     let exit = self.name_normalizer.normalize(&header_line_tokens[column]);
                     let price = line_token[column].replace(',', ".");
-                    let price = (price.parse::<f32>().unwrap() * 100.) as u16;
+                    let price = price.parse::<Currency>().unwrap();
                     self.insert_price(&mut audit, file_name, &entry, &exit, category, price, year)
                 }
             }

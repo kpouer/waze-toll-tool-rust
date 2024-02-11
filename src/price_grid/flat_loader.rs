@@ -5,6 +5,7 @@ use crate::io_tools::read_lines;
 use crate::price::Price;
 use crate::price_grid::price_load_audit::{PriceLoadAudit, PriceLoadError};
 use crate::price_grid::{FlatFileName, PriceKey, PriceLoader};
+use crate::price_grid::currency::Currency;
 
 impl<'a> PriceLoader<'a> {
     pub(crate) fn load_flat(&mut self) -> PriceLoadAudit {
@@ -65,9 +66,7 @@ impl<'a> PriceLoader<'a> {
             Category::Motorcycle => {flat_file_name.motorcycle_index}
         };
 
-        if let Ok(price_value) = tokens[price_index].replace(',',".").parse::<f32>() {
-            let price_value = (price_value * 100.) as u16;
-
+        if let Ok(price_value) = tokens[price_index].replace(',',".").parse::<Currency>() {
             let price = Price {
                 price: price_value,
                 year: flat_file_name.year,

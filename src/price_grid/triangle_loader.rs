@@ -4,6 +4,7 @@ use crate::category::Category;
 use crate::io_tools::{is_dir, read_lines_tokens};
 use crate::price_grid::price_load_audit::{PriceLoadAudit, PriceLoadError};
 use crate::price_grid::{get_year, PriceLoader};
+use crate::price_grid::currency::Currency;
 
 impl<'a> PriceLoader<'a> {
     pub(crate) fn load_triangles(&mut self, category: Category) -> PriceLoadAudit {
@@ -38,9 +39,8 @@ impl<'a> PriceLoader<'a> {
                     let line_tokens_2 = &tokenized_lines[column];
                     let exit = self.name_normalizer.normalize(&line_tokens_2[line_tokens_2.len() - 1]);
                     let price_token = &line_tokens_2[row].replace(',', ".");
-                    if let Ok(value) = price_token.parse::<f32>() {
-                        let value = (value * 100.) as u16;
-                        self.insert_price(&mut audit, file_name, &entry, &exit, category, value, year);
+                    if let Ok(value) = price_token.parse::<Currency>() {
+                        self.insert_price(&mut audit, file_name, &entry, &exit, category, value.clone(), year);
                         self.insert_price(&mut audit, file_name, &exit, &entry, category, value, year);
                     } else {
                         println!("Invalid price for {} -> {} : {}", entry, exit, price_token);
