@@ -16,6 +16,7 @@ const USAGE: u8 = 64;
 fn usage() -> ExitCode {
     println!("waze-toll-tool build-matrix <toll-file.json>");
     println!("waze-toll-tool get-prices <entry_name>");
+    println!("waze-toll-tool debug-tolls <entry_name>");
     println!("waze-toll-tool check-prices");
     ExitCode::from(USAGE)
 }
@@ -27,6 +28,16 @@ fn command_build_matrix(args: &Vec<String>) -> ExitCode {
     let toll_file = &args[2];
     let price_service = PriceService::new();
     price_service.build_matrix(toll_file);
+    ExitCode::SUCCESS
+}
+
+fn command_debug_tolls(args: &Vec<String>) -> ExitCode {
+    if args.len() < 3 {
+        return usage();
+    }
+    let toll_file = &args[2];
+    let price_service = PriceService::default();
+    price_service.debug_tolls(toll_file);
     ExitCode::SUCCESS
 }
 
@@ -71,6 +82,8 @@ fn main() -> ExitCode {
         return command_get_station(&args);
     } else if first_arg == "get-prices" {
         return command_get_prices(&args);
+    } else if first_arg == "debug-tolls" {
+        return command_debug_tolls(&args);
     }
     usage()
 }

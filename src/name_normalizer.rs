@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use unidecode::unidecode;
 use crate::io_tools::read_lines;
 
-
+#[derive(Default)]
 pub(crate) struct NameNormalizer {
     map: HashMap<String, String>
 }

@@ -33,6 +33,7 @@ impl Audit {
     }
 }
 
+#[derive(Default)]
 pub(crate) struct PriceService {
     prices: HashMap<PriceKey, Price>,
     name_normalizer: NameNormalizer
@@ -99,6 +100,18 @@ impl PriceService {
             for toll in &mut toll_file.tolls {
                 self.update_toll_matrix(toll)
             }
+            write_toll_file(&toll_file, "out.json");
+        } else {
+            eprintln!("Failed to load toll file {}", toll_file_name);
+            eprintln!("{}", toll_file.err().unwrap());
+        }
+    }
+
+    pub(crate) fn debug_tolls(&self, toll_file_name: &String) {
+        println!("Debugging tolls for {}", toll_file_name);
+        let toll_file = load_toll_file(toll_file_name);
+        if let Ok(toll_file) = load_toll_file(toll_file_name) {
+            println!("Loaded toll file {} containing {} toll", toll_file_name, toll_file.tolls.len());
             write_toll_file(&toll_file, "out.json");
         } else {
             eprintln!("Failed to load toll file {}", toll_file_name);
@@ -176,6 +189,7 @@ impl PriceService {
         let matrix = Matrix {
             friendly_name: category.to_string(),
             matrix_prices,
+            each_section_is_entry_or_exit: false,
             permit_id: "".to_string(),
             limit_to_vehicles
         };

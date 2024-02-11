@@ -28,6 +28,7 @@ pub(crate) struct Toll {
 pub(crate) struct Matrix {
     pub(crate) friendly_name: String,
     pub(crate) matrix_prices: Vec<Vec<Currency>>,
+    pub(crate) each_section_is_entry_or_exit: bool,
     pub(crate) permit_id: String,
     pub(crate) limit_to_vehicles: Vec<String>
 }
