@@ -32,12 +32,20 @@ impl FromStr for Currency {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('.').collect();
-        let value = parts[0].parse::<i16>().unwrap();
-        if parts.len() == 1 {
-            return Ok(Currency { value, cents: 0 });
+        if let Ok(value) = parts[0].parse::<i16>() {
+            if parts.len() == 1 {
+                return Ok(Currency { value, cents: 0 });
+            }
+            if let Ok(cents) = parts[1].parse::<i8>() {
+                return Ok(Currency { value, cents });
+            } else {
+                eprintln!("Invalid cents {}", parts[1]);
+                return Err(());
+            }
+        } else {
+            eprintln!("Invalid currency {}", s);
+            return Err(());
         }
-        let cents = parts[1].parse::<i8>().unwrap();
-        Ok(Currency { value, cents })
     }
 }
 

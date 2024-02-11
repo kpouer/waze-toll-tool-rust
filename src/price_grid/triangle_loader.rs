@@ -43,7 +43,7 @@ impl<'a> PriceLoader<'a> {
                         self.insert_price(&mut audit, file_name, &entry, &exit, category, value.clone(), year);
                         self.insert_price(&mut audit, file_name, &exit, &entry, category, value, year);
                     } else {
-                        println!("Invalid price for {} -> {} : {}", entry, exit, price_token);
+                        println!("Invalid price for {} -> {} : {} ({}:{})", entry, exit, price_token, file_name, row);
                         let error = PriceLoadError {
                             file_name: file_name.to_string(),
                             line: "".to_string(),
