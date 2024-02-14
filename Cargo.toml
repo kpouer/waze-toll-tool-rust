@@ -6,8 +6,10 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+env_logger = "0.11.2"
+log = "0.4.20"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
-chrono = "0.4.31"
+chrono = "0.4.34"
 enum-iterator = "1.5.0"
 unidecode = "0.3.0"

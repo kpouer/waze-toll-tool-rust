@@ -75,15 +75,16 @@ fn main() -> ExitCode {
 
     let first_arg = &args[1];
     if first_arg == "build-matrix" {
-        return command_build_matrix(&args);
+        command_build_matrix(&args)
     } else if first_arg == "check-prices" {
-        return command_check_prices();
+        command_check_prices()
     } else if first_arg == "get-station" {
-        return command_get_station(&args);
+        command_get_station(&args)
     } else if first_arg == "get-prices" {
-        return command_get_prices(&args);
+        command_get_prices(&args)
     } else if first_arg == "debug-tolls" {
-        return command_debug_tolls(&args);
+        command_debug_tolls(&args)
+    } else {
+        usage()
     }
-    usage()
 }
