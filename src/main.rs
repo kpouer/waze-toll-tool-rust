@@ -10,6 +10,7 @@ mod name_normalizer;
 mod price_service;
 mod price;
 mod category;
+mod json;
 
 pub(crate) const DEFAULT_YEAR: u16 = 2019;
 const USAGE: u8 = 64;

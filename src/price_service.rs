@@ -3,10 +3,15 @@ use std::{fmt, fs};
 use std::fmt::Formatter;
 use chrono::{Datelike, Utc};
 use crate::category::Category;
+use crate::json::ToJson;
 use crate::name_normalizer::NameNormalizer;
 use crate::price::Price;
 use crate::price_grid::{PriceKey, PriceLoader};
-use crate::toll_file::{load_toll_file, Matrix, Section, Toll, TollFile};
+use crate::toll_file::{load_toll_file};
+use crate::toll_file::matrix::Matrix;
+use crate::toll_file::section::Section;
+use crate::toll_file::toll::Toll;
+use crate::toll_file::toll_file::TollFile;
 
 struct Audit {
     obsolete: u16,
@@ -189,7 +194,15 @@ impl fmt::Display for PriceService {
 }
 
 fn write_toll_file(toll: &TollFile, file_name: &str) {
-    let json = serde_json::to_string_pretty(&toll).unwrap();
+    let json = serialize_custom(toll).unwrap();
     fs::write(file_name, json).expect("Unable to write file");
     println!("Wrote {}", file_name);
+}
+
+fn serialize_with_serde(toll: &TollFile) -> Result<String, String> {
+    serde_json::to_string_pretty(&toll).map_err(|e| e.to_string())
+}
+
+fn serialize_custom(toll: &TollFile) -> Result<String, String> {
+    toll.to_json()
 }
