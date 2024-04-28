@@ -1,23 +1,6 @@
 use log::{info, warn};
-
 use crate::hash;
-
-#[derive(Clone)]
-pub(crate) struct User {
-    pub(crate) username: String,
-    /**
-     * The password is salted using BCrypt
-     */
-    pub(crate) password_hash: String,
-    pub(crate) teams: Vec<String>,
-    pub(crate) admin: bool
-}
-
-impl User {
-    pub(crate) fn is_valid(&self, password: &str) -> bool {
-        hash::check(&self.password_hash, password)
-    }
-}
+use crate::user::User;
 
 #[derive(Clone)]
 pub(crate) struct UserRepository {
@@ -81,7 +64,7 @@ impl UserRepository {
         }
         teams
     }
-    
+
     fn find_user(&self, username: &str) -> Option<&User> {
         self.users
             .iter()

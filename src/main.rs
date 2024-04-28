@@ -3,6 +3,7 @@ use axum::Router;
 use axum::routing::get;
 use axum_auth::AuthBasic;
 use log::info;
+use crate::user::user_repository::UserRepository;
 
 mod admin;
 mod hash;
@@ -11,7 +12,7 @@ mod security;
 
 #[derive(Clone)]
 pub(crate) struct RoadworkServerData {
-    user_repository: user::UserRepository
+    user_repository: UserRepository
 }
 
 async fn info() -> &'static str {
@@ -34,7 +35,7 @@ async fn main() {
     env_logger::init();
     log::info!("Starting Roadwork server");
     let roadwork_server_data = RoadworkServerData {
-        user_repository: user::UserRepository::default()
+        user_repository: UserRepository::default()
     };
     let app = Router::new()
         .route("/info", get(info))
@@ -42,5 +43,6 @@ async fn main() {
         .with_state(roadwork_server_data)
         ;
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    info!("Listen on 0.0.0.0:8080");
     axum::serve(listener, app).await.unwrap();
 }
