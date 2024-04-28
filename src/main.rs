@@ -5,10 +5,10 @@ use axum_auth::AuthBasic;
 use log::info;
 use crate::user::user_repository::UserRepository;
 
-mod admin;
 mod hash;
 mod user;
 mod security;
+mod router;
 
 #[derive(Clone)]
 pub(crate) struct RoadworkServerData {
