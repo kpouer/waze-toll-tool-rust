@@ -7,25 +7,25 @@ use log::info;
 
 use crate::{hash, RoadworkServerData};
 
+pub(crate) fn admin_routes() -> Router<RoadworkServerData> {
+    Router::new()
+        .route("/teams", get(list_teams))
+        .route("/users", get(list_users))
+        .route("/check/:bcrypted/:password", get(check))
+        .route("/salt/:password", get(salt))
+}
+
 pub(crate) async fn list_teams(State(state): State<RoadworkServerData>) -> Json<Vec<String>> {
     info!("list_teams");
-    let mut teams = HashSet::new();
-    state.user_repository.users
-        .iter()
-        .flat_map(|user| user.teams.clone())
-        .for_each(|team| {
-            teams.insert(team);
-        });
-    let result = teams.into_iter().collect();
-    Json(result)
+    let teams = state.user_repository.list_teams().await;
+    info!("list_teams -> {:?}", teams);
+    Json(teams)
 }
 
 pub(crate) async fn list_users(State(state): State<RoadworkServerData>) -> Json<Vec<String>> {
     info!("list_users");
-    let user_names = state.user_repository.users
-        .iter()
-        .map(|user| user.username.clone())
-        .collect::<Vec<String>>();
+    let user_names = state.user_repository.list_users().await;
+    info!("list_users -> {:?}", user_names);
     Json(user_names)
 }
 
@@ -45,12 +45,4 @@ pub(crate) async fn salt(Path(password): Path<String>) -> String {
     let response = format!("Bcrypt {} -> {}", password, salted_password);
     info!("Salt XXXXXXX -> {}", salted_password);
     response
-}
-
-pub(crate) fn admin_routes() -> Router<RoadworkServerData> {
-    Router::new()
-        .route("/admin/teams", get(list_teams))
-        .route("/admin/users", get(list_users))
-        .route("/admin/check/:bcrypted/:password", get(check))
-        .route("/admin/salt/:password", get(salt))
 }

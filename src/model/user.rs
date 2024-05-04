@@ -1,8 +1,8 @@
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use crate::hash;
 
-pub(crate) mod user_repository;
-
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub(crate) struct User {
     pub(crate) username: String,
     /**
@@ -10,7 +10,7 @@ pub(crate) struct User {
      */
     pub(crate) password_hash: String,
     pub(crate) teams: Vec<String>,
-    pub(crate) admin: bool
+    pub(crate) admin: bool,
 }
 
 impl User {
